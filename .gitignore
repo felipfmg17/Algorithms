@@ -1,1 +1,6 @@
-Reference/
+*.aux
+*.toc
+*.gz
+*.pdf
+*.out
+*.log
