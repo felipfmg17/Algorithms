@@ -90,8 +90,7 @@ class Numbers
 	/* returns x such that ax = 1 mod m
 		conditions:
 		gcd(a,m)=1
-		--- euclid(long a,long b):long
-	*/
+		--- euclid(long a,long b):Long*/
 	public static long modInverse(long a,long m)
 	{	return (euclid(a,m)[0]%m+m)%m;	}
 	
@@ -115,7 +114,6 @@ class Numbers
 	public static long factorial(long n,long m)
 	{ 	return product(2,n,m);}
 	
-	
 	/* 	returns nPr mod m 
 		conditions:
 		---product(long a,long b,long m):long	*/
@@ -131,6 +129,4 @@ class Numbers
 		r=Math.min(n-r,r);
 		return product(n-r+1,n,m)*modInverse(product(2,r,m),m)%m;
 	}
-	
-	
 }
