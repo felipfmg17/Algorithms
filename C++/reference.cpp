@@ -4,15 +4,79 @@
 
 using namespace std;
 
-typedef vector<int> vi;
-typedef stack<int> si;
-typedef queue<int> qi;
-typedef pair<int,int> ii;
+typedef int num;
+typedef vector<num> vi;
+typedef vector< vi > vvi;
 typedef vector<ii> vii;
+typedef stack<num> si;
+typedef queue<num> qi;
+typedef pair<num,num> ii;
+
+
 
 
 /************************************************************************** Data Structures ************************************************************/
 
+#define lsb(x) x&(-x)
+
+struct Fenwick{
+	vi b;
+	Fenwick(int n): b(n+1,0) {}
+	void update(int i,num v){ for(;i<b.size();i+=lsb(i) ) b[i]+=v; }
+	num query(int i){ num m=0;  for(;i!=0;i-=lsb(i) ) m+=b[i]; return m;}
+};
+
+void r_update(Fenwick b1,Fenwick b2,int i,int j,num v){ b1.update(i,v); b1.update(j+1,-v); b2.update(i,v*(i-1)); b2.update(j+1,-v*j); }
+num r_query(Fenwick b1,Fenwick b2,int i){ return b1.query(i)*i - b2.query(i); }
+
+struct Fenwick2D{
+	vvi b;
+	Fenwick2D(int l,int h): b(l+1, vi(h+1,0) ) {}
+	void update(int x, int y, num v){ for(int i=x;i<b.size();i+=lsb(i)) for(int j=y;j<b[i].size();j+=lsb(j)) b[i][j]+=v; }
+	num query(int x,int y){ num m=0; for(int i=x;i!=0;i-=lsb(i)) for(int j=y;j!=0;j-=lsb(j)) m+=b[i][j]; return m;}
+	num query(int x1,int y1,int x2,int y2){  return query(x2,y2) + query(x1-1,y1-1) - query(x1-1,y2) - query(x2,y1-1); }
+};
+
+
+#define NEUTRO 0
+
+struct SegmentTree{
+	num L,R,val,*lazy;
+	SegmentTree *left,*right;
+
+	SegmentTree(num  l,num r){	L=l; R=r;	val=NEUTRO;	lazy=NULL; left=right=NULL;}
+	~SegmentTree(){ if(left) delete left; if(right) delete right; }
+
+	num link(num a,num b){return a+b;}
+	num range(num range,num val){ return range*val ;}
+	num mix(num a,num b){return a+b;}
+
+	void build(){
+		if(left==NULL){	left=new SegmentTree( L, (L+R)/2 );	right=new SegmentTree( (L+R)/2 +1, R);	}
+		if(lazy!=NULL){
+			left->update(L, (L+R)/2 ,*lazy);	right->update( (L+R)/2 +1 , R ,*lazy);
+			delete lazy;	lazy=NULL;
+	}	}
+
+	void update(num i,num j,num v){
+		if( i>R || j<L ) return;
+		if( L>=i && R<=j ){  val=mix(val, range(R-L+1,v) ); if(lazy==NULL){lazy=new num; *lazy=NEUTRO;} *lazy=mix(*lazy,v); return;}  
+		build();	left->update(i,j,v);	right->update(i,j,v);
+		val = link( left->val, right->val );	}
+
+	num  query(num i,num j){
+		if( i>R || j<L ) return NEUTRO;	if( L>=i && R<=j ) return val;
+		build();	return link( left->query(i,j) , right->query(i,j) );	}
+};
+
+
+struct UnionFind{
+	int sets;	vi p,l;
+	UnionFind(int n){ sets=0; f(i,n) make(); }
+	void make(){ p.push_back(p.size()); l.push_back(1); sets++; }
+	int find(int u){if(u!=p[u]) p[u]=find(p[u]); return p[u];}
+	void join(int u,int v){	u=find(u); v=find(v); if(u!=v){ p[v]=u; l[u]+=l[v]; sets--; } }
+};
 
 
 
@@ -50,26 +114,19 @@ struct Line{
 	double distance(Line &l){return equal(m*l.m,0)? distance(l.d): 0 ; }
 };
 
-struct Segment{
-	Point a,b,m;
-	Segment(Point &p,Point &q): m(p-q), a(p), b(q) {}
-};
 
 
 
-
-
-
-
-/******************************************************************* Graph *******************************************************************************/
+/****************************************************************************** Graph ************************************************************************/
+typedef int key;
 
 struct Graph{
 	int n;
-	map<int,int> t1;
-	vi t2;
+	map<key,int> t1;
+	vector<key> t2;
 
-	vector< vi > cons;
-	vector< vi > wei;
+	vvi cons;
+	vvi wei;
 	vi in_degs;
 	vector< set<int> > reps;
 	
@@ -77,7 +134,7 @@ struct Graph{
 	Graph(int nodes) : n(nodes), cons( nodes,vi() ), wei( nodes,vi() ), in_degs(nodes,0), reps(nodes, set<int>() ) {}
 
 
-	void add_node(int u){
+	void add_node(key u){
 		if(t1.count(u)==0){ 
 			t1[u]=n++;	t2.push_back(u);
 			cons.push_back( vi() );
@@ -87,7 +144,7 @@ struct Graph{
 	}	}
 
 
-	void add_edge(int u,int v,int w){
+	void add_edge(key u,key v,int w){
 		add_node(u); add_node(v);
 		int a=t1[u],b=t1[v];
 		if(reps[a].count(b)) return;
@@ -131,7 +188,7 @@ struct Graph{
 
 
 
-int  grid_edge_distance(vector< vi > &grid, vector< vi > &dist,int r,int c){
+int  grid_edge_distance(vvi &grid, vvi &dist, int r,int c){
 	int dr[]={1,1,0,-1,-1,-1,0,1};	int dc[]={0,1,1,1,0,-1,-1,-1};
 	int nodes=0,rr,cc;	queue< ii > order;
 	if(grid[r][c]==1){	dist[r][c]=0;	order.push( ii(r,c) );	}
