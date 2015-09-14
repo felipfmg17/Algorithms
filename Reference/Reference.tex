@@ -1,6 +1,6 @@
-\documentclass[10pt]{article}
+\documentclass[12pt,a4paper]{article}
 
-
+\usepackage[landscape]{geometry}
 \usepackage{verbatim}
 \usepackage[hidelinks]{hyperref}
 \usepackage{graphicx}
@@ -12,33 +12,46 @@
 
 
 
+\oddsidemargin -0.1in
+\textwidth 9.5in
 
-\oddsidemargin 0in
-\textwidth 6.75in
-\topmargin -0.7in
-\textheight 9.2in
-\parindent 0em
-\parskip 1ex
+
+
+\begin{comment}
+	\oddsidemargin -0.65in
+	\textwidth 7.6in
+	\topmargin -0.7in
+	\textheight 9.4in
+	\parindent 0em
+	\parskip 1ex
+\end{comment}
+
+
+
+
+\setlength{\columnsep}{1cm}
+
 
 
 \lstset
 {
-	language=Java,
+	language=C++,
 	extendedchars=true,
-	numbers=left,
 	breaklines=true,
-	frame=L,
 	tabsize=2,
-	numberstyle=\color{Gray},
-	basicstyle=\scriptsize\color{blue},
+	basicstyle=\ttfamily\scriptsize\color{blue},
 	identifierstyle=\color{black},
-	commentstyle=\color{PineGreen}\textsl,
+	commentstyle=\color{Green}\textsl,
 	stringstyle=\color{Gray},
-	keywordstyle=\color{blue}\textbf
+	keywordstyle=\color{Rhodamine}\textbf,
+	numbers=left,
+	backgroundcolor=\color{white}
 }
 
 
-\title{Felipe Reference}
+
+
+\title{Reference}
 \author{Felipe Mendoza Galves}
 \date{}
 
@@ -49,29 +62,41 @@
 	\maketitle
 	\newpage
 	\tableofcontents
+	
 	\newpage
-	
-	\section{Java}
-	\subsection{FenwickTree}\lstinputlisting{"../Java/FenwickTree/FT.java"}
-	\subsection{FenwickTree 2D}\lstinputlisting{"../Java/FenwickTree 2D/FT.java"}
-	\subsection{FenwickTree with Range Updates}\lstinputlisting{"../Java/FenwickTree with Range Updates/FT.java"}
-	\subsection{UnionFind}\lstinputlisting{"../Java/UnionFind/UF.java"}
-	\subsection{SegmentTree}\lstinputlisting{"../Java/SegmentTree/ST.java"}
-	\subsection{SegmentTree with Lazy Propagation}\lstinputlisting{"../Java/SegmentTree with Lazy Propagation/ST.java"}
-	\subsection{InputReader}\lstinputlisting{"../Java/InputReader/R.java"}
-	\subsection{Numbers}\lstinputlisting{"../Java/Numbers/Numbers.java"}
-
-	
+	\section{Data Structures}
 		
-
+		\begin{multicols*}{2}
+			\subsection{FenwickTree}
+			\lstinputlisting[firstline=18, lastline=67]{../C++/reference.cpp}
+			\subsection{SegmentTree}
+			\lstinputlisting[firstline=70, lastline=130]{../C++/reference.cpp}
+			\subsection{UnionFind}
+			\lstinputlisting[firstline=132, lastline=151]{../C++/reference.cpp}
+		\end{multicols*}
+		
+		
 	\newpage
-	\section{C++}
-	\subsection{Estructuras}\lstinputlisting{"../c++_club/Estructuras.cpp"}
-		\subsection{Flujo}\lstinputlisting{"../c++_club/Flujo.cpp"}
-		\subsection{Geometria}\lstinputlisting{"../c++_club/Geometria.cpp"}
-		\subsection{Grafo}\lstinputlisting{"../c++_club/Grafo.cpp"}
-		\subsection{Matematica}\lstinputlisting{"../c++_club/Matematica.cpp"}
+	\section{Graph}
+		\begin{multicols*}{2}
+			\lstinputlisting[firstline=1, lastline=1]{../C++/reference.cpp}
+		\end{multicols*}
+	
+	\newpage
+	\section{Mathematics}
+		\subsection{Number Theory}
+		\begin{multicols*}{2}
+			\lstinputlisting[firstline=1, lastline=1]{../C++/reference.cpp}
+		\end{multicols*}
+		
+	\newpage
+	\section{Geometry}
+		\begin{multicols*}{2}
+			\lstinputlisting[firstline=1, lastline=1]{../C++/reference.cpp}
+		\end{multicols*}
 
+
+	
 	
 	
 	
@@ -80,29 +105,16 @@
 
 \begin{comment}
 
-
+	\tableofcontents
 	\begin{multicols}{2}
 	\end{multicols}
 
-	\begin{figure}[!ht]
-	\begin{center}
+	\begin{figure}[!ht]	\begin{center}
 	\includegraphics[width=0.4\textwidth]{}
-	\caption{}
-	\end{center}
-	\end{figure}
+	\caption{}	\end{center}\end{figure}
 	
-	\lstinputlisting{}
+
 	\lstinputlisting{../Numbers.java}
-	
-	
-	
-	
-	
-		
-	
-	
-	
-	
 	
 
 \end{comment}
