@@ -163,19 +163,17 @@ struct UnionFind{
 #define UNVIS -1
 
 
-
 typedef int key;
 
 struct Graph{
 	int n;
-	map<key,int> tab;
-	vector<key> keys;
-
 	vvi edges;
 	vvi weights;
 	vi in_degs;
-	vi info;
 	vector< set<int> > reps;
+
+	map<key,int> tab;
+	vector<key> keys;
 	
 	Graph(): n(0) {}
 	Graph(int nodes): 
@@ -183,34 +181,36 @@ struct Graph{
 		edges(nodes,vi()), 
 		weights(nodes,vi()), 
 		in_degs(nodes,0), 
-		info(nodes,1), 
 		reps(nodes,set<int>()) {}
 
 
-	void add_node(key u){
-		if(tab.count(u)==0){ 
-			tab[u]=n++;	
-			keys.push_back(u);
-			edges.push_back( vi() );
-			weights.push_back( vi() ); 
-			in_degs.push_back(0); 
-			info.push_back(1);
-			reps.push_back( set<int>() );
-		}	
+
+	void add_node(){
+		n++;
+		edges.push_back( vi() );
+		weights.push_back( vi() ); 
+		in_degs.push_back(0); 
+		reps.push_back( set<int>() );
 	}
 
 
 
-	void add_edge(key u,key v,int w){
-		add_node(u); 
-		add_node(v);
-		int a=tab[u],b=tab[v];
-		if(reps[a].count(b)) 
+	void add_edge(int u,int v,int w){
+		if(reps[u].count(v)) 
 			return;
-		edges[a].push_back(b);
-		weights[a].push_back(w);
-		in_degs[b]++;
-		reps[a].insert(b);	
+		edges[u].push_back(v);
+		weights[u].push_back(w);
+		in_degs[v]++;
+		reps[u].insert(v);	
+	}
+
+	int make_vertex(key u){
+		if(tab.count(u)==0){
+			tab[u]=n;
+			keys.push_back(u);
+			add_node();
+		}
+		return tab[u];
 	}
 
 
@@ -311,6 +311,8 @@ struct Graph{
 					parent[v]=u;
 					order.push(v);
 					w_edges.push( ii(u,v) );
+					if(u==s)
+						artics[s]++;
 				}
 				else if(v!=parent[u] && hig[u]>hig[v]){
 					low[u]=min(low[u],low[v]);					
@@ -340,10 +342,64 @@ struct Graph{
 				
 			}
 		}
-		if(edges[s].size()<2)
-			artics[s]=0;
+
+		artics[s]= artics[s]>=2? 1:0;
+
 	}
 	
+
+
+	void strongly_connected(int s,vi &res,vvi &strongs){
+		int u,v,p;
+		int count=0;
+		vi it(n,0);
+		vi hig(n,UNVIS);
+		vi low(n,UNVIS);
+		si w_vertex;
+		si order;
+		u=s;
+		hig[u]=count;
+		low[u]=count++;
+		order.push(u);
+		w_vertex.push(u);
+
+		while(!order.empty()){
+			u=order.top();
+			if(it[u]<edges[u].size()){
+				v=edges[u][it[u]];
+				if(res[v]==UNVIS)
+					if(hig[v]==UNVIS){
+						hig[v]=count;
+						low[v]=count++;
+						order.push(v);
+						w_vertex.push(v);
+					}
+					else 
+						low[u]=min(low[u],low[v]);
+				it[u]++;
+			}
+			else{
+				order.pop();
+				res[u]=VIS;
+
+				if(hig[u]==low[u]){
+					strongs.push_back(vi());
+					while(1){
+						int vertex=w_vertex.top();
+						w_vertex.pop();
+						strongs.back().push_back(vertex);
+						if(vertex==u)
+							break;
+					}
+				}
+				if(u!=s){
+					p=order.top();
+					low[p]=min(low[p],low[u]);
+				}
+			}
+		}
+		
+	}
 
 
 
@@ -492,39 +548,7 @@ struct Line{
 
 int main()
 {
-	
-	
-	Graph g;
 
-	int u,v;
-	int n;
-	cin >> n;
-
-	while(n--){
-		cin >> u >> v;
-
-		g.add_edge(u,v,0);
-		g.add_edge(v,u,0);
-	}
-
-	vector< vii > bicons;
-	vi artics(g.n,0);
-	vi res(g.n,UNVIS);
-
-	g.biconnected(0,res,artics,bicons);
-
-	cout<<"\narticulation points:\n";
-	f(i,g.n){
-		cout << artics[i] <<" ";
-	}
-	cout << "\n";
-
-	cout << "Biconnected components " << bicons.size()<< "\n";
-	for(vii bi: bicons){
-		f(i,bi.size())
-			cout << bi[i].first <<"-" << bi[i].second << " , ";
-		cout << "\n";
-	}
 	return 0;
 
 }
@@ -533,4 +557,4 @@ int main()
 
 
 
-//  cls && g++ -std=c++11  reference(.cpp -o reference
+//  cls && g++ -std=c++11  reference.cpp -o reference && reference
