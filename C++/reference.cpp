@@ -154,7 +154,8 @@ struct UnionFind{
 
 
 
-
+int find(int u){ return (p[u])==u)? u, (p[u]=find(p[u])); }
+void join(int u,int v){ u=find(u);v=find(v); if(u^v) p[u]=v;}
 
 /************ Graph ****************/
 
@@ -258,6 +259,8 @@ struct Graph{
 	}
 
 
+
+
 	bool bipartite(int u,vi &color){
 		int v; 
 		qi order;
@@ -302,6 +305,7 @@ struct Graph{
 		order.push(u);
 		while(!order.empty()){
 			u=order.top();
+			
 			if(it[u]<edges[u].size()){
 				v=edges[u][it[u]];
 				if(res[v]==UNVIS){
@@ -546,12 +550,41 @@ struct Line{
 
 /************ Main **************/
 
-int main()
-{
 
-	return 0;
+vi visits(50001,UNVIS);
+vi dist(500001,UNVIS);
+vi position(500001,UNVIS);
+
+
+
+ii mdfs(Graph &g,int u,int pos){
+	visits[u]=VIS;
+	position[u]=pos;
+	int v=g.edges[u][0];
+
+	if(dist[v]!=UNVIS){
+		dist[u]=dist[v]+1;
+		return ii(dis[u]+pos,pos);
+	}
+	else if(visits[v]==VIS){
+		dis[u]=pos-position[v]
+	}
+}
+
+void problem(){
+
 
 }
+
+
+
+
+int main()
+{
+	problem();
+	return 0;
+}
+
 
 
 
