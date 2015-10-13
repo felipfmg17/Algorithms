@@ -1,23 +1,40 @@
 ///////// NEW REFERENCE ///////
 
+#include <bits/stdc++.h>
+using namespace std;
+typedef vector<int> vi;
+typedef pair<int ,int> ii;
+typedef vector< ii > vii;
 
-// DFS
 
+
+
+// Count Connected Components
+
+int vis[1000000],cc;
 
 void dfs(int u){
-	vis[u]=VIS;
+	vis[u]=1;
 	for(int v:g[u])
-		if(vis[v]==UNVIS)
+		if(vis[v]==0)
 			dfs(v);
 }
 
+cc=0;
+fill(vis,vis+n,0);
+for(int i=0;i<n;i++)
+	if(vis[i]==0){
+		dfs(u);
+		cc++;
+	}
 
-// Single Source Shortest Path Unweighted Graph
+
+// Single Source Shortest Path Unweighted Graph (BFS)
 
 
-vi dist(n,INF);
+vi dist(n,-1);
 for(int i;i<n;i++){
-	if(dist[i]==INF){
+	if(dist[i]==-1){
 		deque<int> order();
 		order.push_back(i);
 		dist[i]=0;
@@ -25,7 +42,7 @@ for(int i;i<n;i++){
 			int u=order.front();
 			order.pop_front();
 			for(int v:g[u])
-				if(dist[v]!=INF){
+				if(dist[v]!=-1){
 					dist[v]=dist[u]+1;
 					order.push_back(v);
 				}
@@ -77,23 +94,23 @@ for(int i=0;i<n;i++)
 		dfs(i,-1);
 
 
+
+
 // Bipartite Check (Bicoloring)
 
-vi color;
+
+int color[1000000];
 
 bool dfs(int u,int c){
 	color[u]=c;
-	for(int v:g[u]){
+	for(int v:g[u])
 		if(color[v]==-1)
-			if(!dfs(v,c^1))
-				return false;
-		else if(color[v]==color[u])
-			return false;
-	}
+			if(!dfs(v,c^1))	return false;
+		else if(color[v]==color[u])	return false;	
 	return true;
 }
 
-color.assign(n,-1);
+fill(color,color+n,-1);
 for(int i=0;i<n;i++)
 	if(color[i]==-1)
 		dfs(i,0);
@@ -116,33 +133,58 @@ void dfs(int x,int y){
 }
 
 
-// Articulations Points and Biconnected Components
-// Tarjan Algorithm
 
-vi hig,low,ap;
-vii wait;
-vector< vii > bc;
-int s_count;
+// Articulation Points
 
-dfs(int u,int p,int pos){
+int hig[1000000],low[1000000],ap[1000000],s_count;
+
+void dfs(int u,int p,int pos){
 	hig[u]=low[u]=pos;
 	for(int v:g[u]){
-		if(v==p) continue;
-		if(p==-1)
-			s_count++;
-		if(hig[v]<hig[u])
-			wait.push_back(ii(u,v));
+		if(v==p) 	continue;
 		if(hig[v]==-1){
-			dfs(v,u,pos+1);
+			if(p==-1)	s_count++;
+			dfs(v,u,++pos);
+			if(hig[u]<=low[v])	ap[u]=1;	
+		}
+		low[u]=min(low[u],low[v]);
+	}
+}
+
+fill(hig,hig+n,-1);
+fill(low,low+n,-1);
+fill(ap,ap+n,0);
+for(int i=0;i<n;i++)
+	if(hig[i]==-1){
+		s_count=0;	
+		dfs(i,-1,0);
+		ap[i]=s_count>=2?1:0;
+	}
+
+
+// Articulations Points and Biconnected Components
+
+
+int hig[1000000],low[1000000],ap[1000000],s_count;
+vii wait;
+vector< vii > bc;
+
+void dfs(int u,int p,int pos){
+	hig[u]=low[u]=pos;
+	for(int v:g[u]){
+		if(v==p) 	continue;
+		if(hig[v]<hig[u])	wait.push_back(ii(u,v));
+		if(hig[v]==-1){
+			if(p==-1)	s_count++;
+			dfs(v,u,++pos);
 			if(hig[u]<=low[v]){
 				ap[u]=1;
 				bc.push_back(vii());
 				while(1){
-					ii tmp=wait.top();
-					wait.pop_back;
+					ii tmp=wait.back();
+					wait.pop_back();
 					bc.back().push_back(tmp);
-					if(tmp.first==u)
-						break;
+					if(tmp.first==u)	break;
 				}
 			}
 		}
@@ -151,19 +193,18 @@ dfs(int u,int p,int pos){
 }
 
 
-hig.assign(n,-1);
-low.assign(n,-1);
-ap.assign(n,0);
+fill(hig,hig+n,-1);
+fill(low,low+n,-1);
+fill(ap,ap+n,0);
 wait.clear();
 bc.clear();
 for(int i=0;i<n;i++)
 	if(hig[i]==-1){
 		s_count=0;	
 		dfs(i,-1,0);
-		ap[i]=s_count>=2?1,0;
+		ap[i]=s_count>=2?1:0;
 	}
 		
-
 
 
 
@@ -217,12 +258,12 @@ int phi(int n){
 
 // Modular Inverse 
 
-inv=(gcd_ext(a,mod).first%mod+mod)%mod;
-inv=bin_exp(a,phi(mod)-1);
+int inv = ( gcd_ext(a,mod).first%mod+mod ) % mod;
+int inv = bin_exp( a,phi(mod)-1 );
 
 // Modular Binomial Coefficient nCr with mod = prime 
 
-fact[n] * bin_exp( fact[r]*fact[n-r]%mod , mod-2 )  %mod;
+int binomial = fact[n] * bin_exp( fact[r]*fact[n-r]%mod , mod-2 )  %mod;
 
 
 
