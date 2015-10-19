@@ -5,9 +5,50 @@ using namespace std;
 typedef vector<int> vi;
 typedef pair<int ,int> ii;
 typedef vector< ii > vii;
+typedef long long lld;
 
+// Fenwick Tree
 
+#define lsb(x) x&(-x)
 
+int ft[1000000];
+void u(int i,int v){for(;i<n;i+=lsb(i))ft[i]+=v;}
+int q(int i){int m=0; for(;i!=0;i-=lsb(i))m+=ft[i];}
+
+// Union Find
+
+vi uf;
+void make(){uf.push_back(uf.size());}
+int find(int u){if(u!=uf[u]) return uf[u]=find(uf[u]);}
+void join(int u,int v){u=find(u);v=find(v); if(u!=v) uf[u]=v;}
+
+// Union Find: set count and set size
+
+vi uf,uf_s;
+int uf_n;
+
+void make(){
+	uf.push_back(uf.size());
+	uf_s.push_back(1);
+	uf_n++;
+}
+
+int find(int u){
+	if(u!=uf[u]) 
+		return uf[u]=find(uf[u]);
+}
+
+void join(int u,int v){
+	u=find(u);v=find(v);
+	if(u!=v) {
+		uf[u]=v;
+		uf_s[v]+=uf_s[u];
+	}
+}
+
+uf.clear();
+uf_s.clear();
+uf_n=0;
 
 // Count Connected Components
 
@@ -28,9 +69,7 @@ for(int i=0;i<n;i++)
 		cc++;
 	}
 
-
 // Single Source Shortest Path Unweighted Graph (BFS)
-
 
 vi dist(n,-1);
 for(int i;i<n;i++){
@@ -95,7 +134,6 @@ for(int i=0;i<n;i++)
 
 
 
-
 // Bipartite Check (Bicoloring)
 
 
@@ -134,18 +172,20 @@ void dfs(int x,int y){
 
 
 
-// Articulation Points
+// Articulation Points and Bridges
 
-int hig[1000000],low[1000000],ap[1000000],s_count;
+int hig[1000000],low[1000000],ap[1000000],sc;
+vii bri;
 
 void dfs(int u,int p,int pos){
 	hig[u]=low[u]=pos;
 	for(int v:g[u]){
 		if(v==p) 	continue;
 		if(hig[v]==-1){
-			if(p==-1)	s_count++;
-			dfs(v,u,++pos);
-			if(hig[u]<=low[v])	ap[u]=1;	
+			if(p==-1)	sc++;
+			dfs(v,u,pos+1);
+			if(hig[u]<=low[v])	ap[u]=1;
+			if(hig[u]<low[v])	bri.push_back(ii(u,v));	
 		}
 		low[u]=min(low[u],low[v]);
 	}
@@ -154,18 +194,18 @@ void dfs(int u,int p,int pos){
 fill(hig,hig+n,-1);
 fill(low,low+n,-1);
 fill(ap,ap+n,0);
+bri.clear();
 for(int i=0;i<n;i++)
 	if(hig[i]==-1){
-		s_count=0;	
+		sc=0;	
 		dfs(i,-1,0);
-		ap[i]=s_count>=2?1:0;
+		ap[i]=(sc>=2)?1:0;
 	}
 
 
 // Articulations Points and Biconnected Components
 
-
-int hig[1000000],low[1000000],ap[1000000],s_count;
+int hig[1000000],low[1000000],ap[1000000],sc;
 vii wait;
 vector< vii > bc;
 
@@ -175,14 +215,13 @@ void dfs(int u,int p,int pos){
 		if(v==p) 	continue;
 		if(hig[v]<hig[u])	wait.push_back(ii(u,v));
 		if(hig[v]==-1){
-			if(p==-1)	s_count++;
-			dfs(v,u,++pos);
+			if(p==-1)	sc++;
+			dfs(v,u,pos+1);
 			if(hig[u]<=low[v]){
 				ap[u]=1;
 				bc.push_back(vii());
 				while(1){
-					ii tmp=wait.back();
-					wait.pop_back();
+					ii tmp=wait.back();	wait.pop_back();
 					bc.back().push_back(tmp);
 					if(tmp.first==u)	break;
 				}
@@ -200,17 +239,68 @@ wait.clear();
 bc.clear();
 for(int i=0;i<n;i++)
 	if(hig[i]==-1){
-		s_count=0;	
+		sc=0;	
 		dfs(i,-1,0);
-		ap[i]=s_count>=2?1:0;
+		ap[i]=sc>=2?1:0;
 	}
-		
+
+// Strongly Connected Components
+
+int hig[1000000],low[1000000],vis[1000000];
+int scc[1000000],scc_n;
+vi wait;
+
+void dfs(int u,int pos){
+	hig[u]=low[u]=pos; vis[u]=1;
+	wait.push_back(u);
+	for(int v:g[u]){
+		if(hig[v]==-1)dfs(v,pos+1);
+		if(vis[v]==1)low[u]=min(low[u],low[v]);
+	}
+	if(hig[u]==low[u]){
+		while(1){
+			int v=wait.back(); wait.pop_back();
+			vis[v]=0;
+			scc[v]=scc_n;
+			if(u==v) break;
+		}
+		scc_n++;
+	}
+}
+
+fill(hig,hig+n,-1);
+fill(low,low+n,-1);
+fill(vis,vis+n,0);
+fill(scc,scc+n,-1);
+wait.clear();
+scc_n=0;
+for(int i=0;i<n;i++)
+	if(hig[i]==-1)
+		dfs(i,0);
 
 
+// SSC to DAG
+
+vi dag[1000000];
+set<int> reps[1000000];
+
+fill(dag,dag+scc_n,vi());
+fill(reps,reps+scc_n,set<int>());
+for(int i=0;i<n;i++)
+	for(int v:g[i]){
+		a=scc[i];	b=scc[v];
+		if(a!=b)
+			if(reps[a].count(b)==0){
+				dag[a].push_back(b);
+				reps[a].insert(b);
+			}	
+	}
 
 // Erathostenes Sieve
 
-vi primes(n,1);
+int primes[1000000];
+
+fill(primes,primes+k,1)
 primes[0]=primes[1]=0;
 int top=ceil(sqrt(N));
 for(int i=2;i<top;i++){
@@ -218,6 +308,16 @@ for(int i=2;i<top;i++){
 		for(int j=i;i*j<=N;j++)
 			primes[i*j]=0;
 }
+
+// Primes to list;
+
+vi prims;
+
+prims.clear();
+for(int i=0;i<k;i++)
+	if(primes[i]==1)
+		prims.push_back(i);
+
 
 // Greatest Common Divisor
 
@@ -234,17 +334,16 @@ ii gcd_ext(int a,int b){
 
 // Binary Exponentiation
 
-int bin_exp(int base,int pot){
+int bin_exp(int b,int e){
 	int res=1;
-	for(;pot>0;pot>>=1){
-		if(base&1)
-			res=res*base%mod;
-		base=base*base%mod;
+	for(;e>0;e>>=1){
+		if(b&1)	res=res*b%mod;
+		b=b*b%mod;
 	}
 	return res;
 }
 
-// Euler´s Totient Function
+// Euler's Totient Function
 
 int phi(int n){
 	if(primes[n]) return n-1;
@@ -263,7 +362,53 @@ int inv = bin_exp( a,phi(mod)-1 );
 
 // Modular Binomial Coefficient nCr with mod = prime 
 
-int binomial = fact[n] * bin_exp( fact[r]*fact[n-r]%mod , mod-2 )  %mod;
+int bin=fact[r]*fact[n-r] % mod;
+bin=fact[n]*bin_exp(bin,mod-2)%mod;     
+
+
+
+
+
+
+
+
+
+// Fenwick Tree Range Updates
+
+void update(int i,int j,int v){ 
+	u1(i,v); 
+	u1(j+1,-v); 
+	u2(i,v*(i-1)); 
+	u2(j+1,-v*j); 
+}
+
+int query(int i){ 
+	return q1(i)*i - q2(i); 
+}
+
+
+// Fenwick Tree 2D
+
+int b[m][n];
+
+void update(int x, int y,int v){ 
+	for(int i=x;i<m;i+=lsb(i)) 
+		for(int j=y;j<n;j+=lsb(j))
+			b[i][j]+=v; 
+}
+
+int query(int x,int y){ 
+	int m=0; 
+	for(int i=x;i!=0;i-=lsb(i)) 
+		for(int j=y;j!=0;j-=lsb(j)) 
+			m+=b[i][j]; 
+		return m;
+}
+
+int query(int x1,int y1,int x2,int y2){  
+	return query(x2,y2)+query(x1-1,y1-1)-query(x1-1,y2)-query(x2,y1-1); 
+}
+
 
 
 

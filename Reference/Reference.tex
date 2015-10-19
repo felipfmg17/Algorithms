@@ -1,6 +1,6 @@
 \documentclass[12pt,a4paper]{article}
 
-\usepackage[landscape]{geometry}
+%\usepackage[landscape]{geometry}
 \usepackage{verbatim}
 \usepackage[hidelinks]{hyperref}
 \usepackage{graphicx}
@@ -13,18 +13,18 @@
 
 
 
-\textwidth 9.5in
+%\textwidth 9.5in
 
 
 
-\begin{comment}
-	\oddsidemargin -0.65in
+
+	\oddsidemargin -0.2in
 	\textwidth 7.6in
 	\topmargin -0.7in
 	\textheight 9.4in
 	\parindent 0em
 	\parskip 1ex
-\end{comment}
+
 
 
 
@@ -39,12 +39,11 @@
 	extendedchars=true,
 	breaklines=true,
 	tabsize=2,
-	basicstyle=\ttfamily\scriptsize\color{blue},
+	basicstyle=\ttfamily\footnotesize\color{black},
 	identifierstyle=\color{black},
-	commentstyle=\color{Green}\textsl,
-	stringstyle=\color{Gray},
-	keywordstyle=\color{Rhodamine}\textbf,
-	numbers=left,
+	commentstyle=\color{red}\textsl,
+	stringstyle=\color{black},
+	keywordstyle=\color{black}\textbf,
 	backgroundcolor=\color{white}
 }
 
@@ -62,6 +61,9 @@
 	\maketitle
 	\newpage
 	\tableofcontents
+	
+	\newpage
+	\lstinputlisting{../C++/new_reference.cpp}
 	
 	\newpage
 	\section{Data Structures}
