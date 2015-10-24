@@ -9,50 +9,141 @@ typedef long long lld;
 
 // Fenwick Tree
 
-#define lsb(x) x&(-x)
+struct FenwickTree{
+	int n; vi ft;
+	FenwickTree(int n_){n=n_+1; ft.assign(n,0);}
+	int lsb(x){return x&(-x);}
+	void update(int i,int v){for(;i<n;i+=lsb(i))ft[i]+=v;}
+	int query(int i){int m=0; for(;i!=0;i-=lsb(i))m+=ft[i]; return m;}
+	int query(int i,int j){return query(j)-query(i-1);}
+};
 
-int ft[1000000];
-void u(int i,int v){for(;i<n;i+=lsb(i))ft[i]+=v;}
-int q(int i){int m=0; for(;i!=0;i-=lsb(i))m+=ft[i];}
+"No index 0, increment n+1"
+"index from 1 to n"
+
+
+// Fenwick Tree Range Updates
+
+struct FenwickTreeRange{
+	FenwickTree ft1,ft2;
+
+	FenwickTreeRange(int n): ft1(n),ft2(n) {}
+
+	void update(int i,int j,int v){ 
+		ft1.update(i,v); ft1.update(j+1,-v); 
+		ft2.update(i,v*(i-1)); ft2.update(j+1,-v*j); 
+	}
+
+	int query(int i){ return ft1.query(i)*i - ft2.query(i); }
+
+	int query(int i,int j){ return query(j)-query(i-1);}
+};
+
 
 // Union Find
 
-vi uf;
-void make(){uf.push_back(uf.size());}
-int find(int u){if(u!=uf[u]) return uf[u]=find(uf[u]);}
-void join(int u,int v){u=find(u);v=find(v); if(u!=v) uf[u]=v;}
+struct UnionFind{
+	vi uf;
+	void make(){uf.push_back(uf.size());}
+	int find(int u){if(u!=uf[u]) return uf[u]=find(uf[u]);}
+	void join(int u,int v){u=find(u);v=find(v); if(u!=v) uf[u]=v;}
+};
 
 // Union Find: set count and set size
 
-vi uf,uf_s;
-int uf_n;
+struct UnionFind{
+	vi uf,uf_s;
+	int uf_n;
 
-void make(){
-	uf.push_back(uf.size());
-	uf_s.push_back(1);
-	uf_n++;
-}
-
-int find(int u){
-	if(u!=uf[u]) 
-		return uf[u]=find(uf[u]);
-}
-
-void join(int u,int v){
-	u=find(u);v=find(v);
-	if(u!=v) {
-		uf[u]=v;
-		uf_s[v]+=uf_s[u];
+	void make(){
+		uf.push_back(uf.size());
+		uf_s.push_back(1);
+		uf_n++;
 	}
+
+	int find(int u){
+		if(u!=uf[u]) 
+			return uf[u]=find(uf[u]);
+	}
+
+	void join(int u,int v){
+		u=find(u);v=find(v);
+		if(u!=v) {
+			uf[u]=v;
+			uf_s[v]+=uf_s[u];
+		}
+	}
+};
+
+"set uf_n to zero after object creation"
+"uf_n: numbert of disjoin sets"
+"uf_s[i]: size of disjoin set i"
+"uf: parents, root of each disjoin set"
+
+// Segment Tree
+
+struct node{
+	int x;
+	node(){		x=0;	}
+	node(int x_){	x=x_;	}
+};
+
+node join(node &n1,node &n2){
+	return node(n1.x+n2.x);
 }
 
-uf.clear();
-uf_s.clear();
-uf_n=0;
+vi ar;
+
+struct SegmentTree{
+	vector<node> st;
+
+	SegmentTree(int n){ st.assign(n*4,node());}
+
+	int lefts(int x){return x<<1;}
+	int rights(int x){ return (x<<1)+1;}
+
+	void build(int p,int L,int R){
+		if(L==R) st[p]=node(ar[L]);
+		else{
+			int h=(L+R)>>1;
+			build(lefts(p),L,h);
+			build(rights(p),h+1,R);
+			st[p]=join(st[lefts(p)],st[rights(p)]);
+		}
+	}
+
+	node query(int p,int L,int R,int i,int j){
+		if(i>R  || j<L) return node();
+		if(L>=i && R<=j) return st[p];
+		int h=(L+R)>>1;
+		node n1=query(lefts(p),L,h,i,j);
+		node n2=query(rights(p),h+1,R,i,j);
+		return join(n1,n2);
+	}
+
+	void update(int p,int L,int R,int i){
+		if(i>R  || i<L) return;
+		if(R==L) build(p,L,R);
+		else{
+			int h=(L+R)>>1;
+			update(lefts(p),L,h,i);
+			update(rights(p),h+1,R,i);
+			st[p]=join(st[lefts(p)],st[rights(p)]);
+		}	
+	}
+};
+
+"ar[] must be filled from 0 to n-1, "
+"To construct the array  call build(1,0,n-1) "
+"query from x to y: query(1,0,n-1,x,y)"
+"update position i with v: update(1,0,n-1,i,v"
+"Default constructor must provide a neutral element";
+
 
 // Count Connected Components
 
-int vis[1000000],cc;
+int cc;
+vector< vi > vis;
 
 void dfs(int u){
 	vis[u]=1;
@@ -62,7 +153,7 @@ void dfs(int u){
 }
 
 cc=0;
-fill(vis,vis+n,0);
+vis.assign(n,0);
 for(int i=0;i<n;i++)
 	if(vis[i]==0){
 		dfs(u);
@@ -136,8 +227,7 @@ for(int i=0;i<n;i++)
 
 // Bipartite Check (Bicoloring)
 
-
-int color[1000000];
+vi color;
 
 bool dfs(int u,int c){
 	color[u]=c;
@@ -148,7 +238,7 @@ bool dfs(int u,int c){
 	return true;
 }
 
-fill(color,color+n,-1);
+color.assign(n,-1);
 for(int i=0;i<n;i++)
 	if(color[i]==-1)
 		dfs(i,0);
@@ -174,7 +264,8 @@ void dfs(int x,int y){
 
 // Articulation Points and Bridges
 
-int hig[1000000],low[1000000],ap[1000000],sc;
+vi hig,low,ap;
+int sc;
 vii bri;
 
 void dfs(int u,int p,int pos){
@@ -191,9 +282,9 @@ void dfs(int u,int p,int pos){
 	}
 }
 
-fill(hig,hig+n,-1);
-fill(low,low+n,-1);
-fill(ap,ap+n,0);
+hig.assign(n,-1);
+low.assign(n,-1);
+ap.assign(n,0);
 bri.clear();
 for(int i=0;i<n;i++)
 	if(hig[i]==-1){
@@ -202,10 +293,14 @@ for(int i=0;i<n;i++)
 		ap[i]=(sc>=2)?1:0;
 	}
 
+"ap: articulation points"
+"sc: source count, determine whether the root is ap"
+
 
 // Articulations Points and Biconnected Components
 
-int hig[1000000],low[1000000],ap[1000000],sc;
+int sc;
+vi hig,low,ap;
 vii wait;
 vector< vii > bc;
 
@@ -232,9 +327,9 @@ void dfs(int u,int p,int pos){
 }
 
 
-fill(hig,hig+n,-1);
-fill(low,low+n,-1);
-fill(ap,ap+n,0);
+hig.assign(n,-1);
+low.assign(n,-1);
+ap.assign(n,0);
 wait.clear();
 bc.clear();
 for(int i=0;i<n;i++)
@@ -244,11 +339,12 @@ for(int i=0;i<n;i++)
 		ap[i]=sc>=2?1:0;
 	}
 
+"bc : biconnected components"
+
 // Strongly Connected Components
 
-int hig[1000000],low[1000000],vis[1000000];
-int scc[1000000],scc_n;
-vi wait;
+int scc_n;
+vi hig,low,vis,scc,wait;
 
 void dfs(int u,int pos){
 	hig[u]=low[u]=pos; vis[u]=1;
@@ -268,10 +364,10 @@ void dfs(int u,int pos){
 	}
 }
 
-fill(hig,hig+n,-1);
-fill(low,low+n,-1);
-fill(vis,vis+n,0);
-fill(scc,scc+n,-1);
+hig.assin(n,-1);
+low.assign(n,-1);
+vis.assign(n,0);
+scc.assign(n,-1);
 wait.clear();
 scc_n=0;
 for(int i=0;i<n;i++)
@@ -279,14 +375,18 @@ for(int i=0;i<n;i++)
 		dfs(i,0);
 
 
+" ssc[i] : tells which scc node i belongs to"
+" scc_n : counts the number of ssc "
+
 // SSC to DAG
 
-vi dag[1000000];
-set<int> reps[1000000];
+vector< vi > dag;
+vector< set<int> > reps;
 
-fill(dag,dag+scc_n,vi());
-fill(reps,reps+scc_n,set<int>());
-for(int i=0;i<n;i++)
+void dag(){
+	dag.assign(scc_n,vi());
+	reps.assign(scc_n,set<int>());
+	for(int i=0;i<n;i++)
 	for(int v:g[i]){
 		a=scc[i];	b=scc[v];
 		if(a!=b)
@@ -295,6 +395,10 @@ for(int i=0;i<n;i++)
 				reps[a].insert(b);
 			}	
 	}
+}
+
+"n: nodes in orignal graph"
+"scc_n : nodes in the dag"
 
 // Erathostenes Sieve
 
@@ -373,18 +477,6 @@ bin=fact[n]*bin_exp(bin,mod-2)%mod;
 
 
 
-// Fenwick Tree Range Updates
-
-void update(int i,int j,int v){ 
-	u1(i,v); 
-	u1(j+1,-v); 
-	u2(i,v*(i-1)); 
-	u2(j+1,-v*j); 
-}
-
-int query(int i){ 
-	return q1(i)*i - q2(i); 
-}
 
 
 // Fenwick Tree 2D
@@ -408,7 +500,4 @@ int query(int x,int y){
 int query(int x1,int y1,int x2,int y2){  
 	return query(x2,y2)+query(x1-1,y1-1)-query(x1-1,y2)-query(x2,y1-1); 
 }
-
-
-
 
