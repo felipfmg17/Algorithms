@@ -110,10 +110,10 @@ struct SegmentTree{
 			val=mix(val, range(R-L+1,v) ); 
 			if(lazy==NULL){
 				lazy=new num; 
-				*lazy=NEUTRO;} 
-				*lazy=mix(*lazy,v); 
-				return;
-			}  
+			*lazy=NEUTRO;} 
+			*lazy=mix(*lazy,v); 
+			return;
+		}  
 		build();	
 		left->update(i,j,v);	
 		right->update(i,j,v);

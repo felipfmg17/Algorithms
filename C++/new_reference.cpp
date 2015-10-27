@@ -7,6 +7,17 @@ typedef pair<int ,int> ii;
 typedef vector< ii > vii;
 typedef long long lld;
 
+
+// Compilation
+
+cls && g++ -std=c++11 main.cpp -o main
+
+
+// Fast I/0
+
+cin.sync_with_stdio(false);
+cin.tie(NULL);
+
 // Fenwick Tree
 
 struct FenwickTree{
@@ -76,7 +87,7 @@ struct UnionFind{
 };
 
 "set uf_n to zero after object creation"
-"uf_n: numbert of disjoin sets"
+"uf_n: number of disjoin sets"
 "uf_s[i]: size of disjoin set i"
 "uf: parents, root of each disjoin set"
 
@@ -88,16 +99,16 @@ struct node{
 	node(int x_){	x=x_;	}
 };
 
-node join(node &n1,node &n2){
+node join(node n1,node n2){
 	return node(n1.x+n2.x);
 }
 
-vi ar;
 
 struct SegmentTree{
 	vector<node> st;
+	vi ar;
 
-	SegmentTree(int n){ st.assign(n*4,node());}
+	SegmentTree(int n){ ar.assign(n,0); st.assign(n*4,node());}
 
 	int lefts(int x){return x<<1;}
 	int rights(int x){ return (x<<1)+1;}
@@ -133,11 +144,212 @@ struct SegmentTree{
 	}
 };
 
+"Simple updates"
 "ar[] must be filled from 0 to n-1, "
 "To construct the array  call build(1,0,n-1) "
 "query from x to y: query(1,0,n-1,x,y)"
-"update position i with v: update(1,0,n-1,i,v"
+"to update first change the value in ar[i]=v then "
+"update position i with v: update(1,0,n-1,i)"
 "Default constructor must provide a neutral element";
+
+
+//Segment Tree : Range Updates, Array Construction
+
+struct node{
+	int *lazy;
+	int x;
+	node(){x=9999999; lazy=NULL;}
+	node(int x_) { x=x_; lazy=NULL; }
+
+	void replace(int v,int L,int R){
+		x=v;
+	}
+
+	void setLazy(int v){
+		if(lazy==NULL) lazy=new int(v);
+		else{ *lazy=v; }
+	}
+
+	void removeLazy(){
+		if(lazy!=NULL) {
+			delete lazy;
+			lazy=NULL;
+		}
+		
+	}
+};
+
+node join(node n1,node n2){
+	node nvo;
+	nvo.x=min(n1.x,n2.x);
+	return nvo;
+}
+
+struct SegmentTree{
+	vector<node> st;
+
+	SegmentTree(int n){st.assign(n*4,node());}
+
+	int lefts(int x){return x<<1;}
+	int rights(int x){ return (x<<1)+1;}
+
+	void build(int p,int L,int R,vi &ar){
+		if(L==R) st[p]=node(ar[L]);
+		else{
+			int h=(L+R)>>1;
+			build(lefts(p),L,h,ar);
+			build(rights(p),h+1,R,ar);
+			st[p]=join(st[lefts(p)],st[rights(p)]);
+		}
+	}
+
+	void propagate(int p,int L,int R){
+		if( st[p].lazy!= NULL){
+			int h=(L+R)>>1;
+			update(lefts(p),L,h,L,h, *(st[p].lazy) );
+			update(rights(p),h+1,R,h+1,R, *(st[p].lazy));
+			st[p].removeLazy();
+		}
+	}
+
+	node query(int p,int L,int R,int i,int j){
+		if(i>R  || j<L) return node();
+		if(L>=i && R<=j) return st[p];
+		propagate(p,L,R);
+		int h=(L+R)>>1;
+		node n1=query(lefts(p),L,h,i,j);
+		node n2=query(rights(p),h+1,R,i,j);
+		return join(n1,n2);
+	}
+
+	void update(int p,int L,int R,int i,int j,int v){
+		if(i>R  || j<L) return;
+		if(L>=i && R<=j){
+			st[p].replace(v,L,R);
+			st[p].setLazy(v);
+			return;
+		} 
+		propagate(p,L,R);
+		int h=(L+R)>>1;
+		update(lefts(p),L,h,i,j,v);
+		update(rights(p),h+1,R,i,j,v);
+		st[p]=join(st[lefts(p)],st[rights(p)]);
+			
+	}
+};
+
+" SegmentTree for range updates using an array, lazy propagation is stored"
+" inside the node struct "
+" If bulid is not called at the begining the tree will start with neutral values"
+" replace() : calculate the value of the current node using the value v"
+" and the range (L,R) "
+" setLazy() : set the lazy flag on the node, if there was a previous value"
+"  do not alter the lazy==NULL  condition"
+" this function must combine both values"
+" join() : it joins to ranges"
+" propagate() updates children if there is a lazy, after that the lazy is removed"
+" node constructor must be provide a neutral value, if not the join function has to "
+" to handle it "
+" build(): must receive an vector of size n with the initial values "
+" when calling query and update from the main function use st.query(1,0,n-1,a,b) "
+" and st.update(1,0,n-1,a,b,v) and st.build((1,0,n-1,ar) "
+
+
+//Segment Tree : Dynamic Construction  Range Updates;
+
+struct node{
+	int x;
+	node(){		x= -99999999;	}
+	node(int x_) { x=x_;}
+
+	void replace(int v,int L,int R){
+		x=v;
+	}
+};
+
+node join(node n1,node n2){
+	node nvo;
+	nvo.x=max(n1.x,n2.x);
+	return nvo;
+}
+
+int combine(int v,int lazy){
+	return v;
+}
+
+
+struct SegmentTree{
+	SegmentTree *left,*right;
+	int L,R,*lazy;
+	node val;
+
+	SegmentTree(int L_, int R_): val() {
+		L=L_; R=R_;
+		left=right=NULL;
+		lazy=NULL;
+	}
+
+	~SegmentTree(){
+		if(lazy!=NULL) delete lazy;
+		if(left!=NULL) delete left;
+		if(right!=NULL) delete right;
+	}
+
+	void build(vi &ar){
+		if(L==R) val=node(ar[L]);
+		else{
+			propagate();
+			left->build(ar);
+			right->build(ar);
+			val=join(left->val,right->val);
+		}
+	}
+
+	void propagate(){
+		if(left==NULL){
+			left=new SegmentTree(L,(L+R)/2);
+			right=new SegmentTree((L+R)/2+1,R);
+		}
+		if(lazy!=NULL){
+			left->update(left->L,left->R,*lazy);	
+			right->update(right->L,right->R ,*lazy);
+			delete lazy;	
+			lazy=NULL;
+		}
+	}
+
+	void update(int i,int j,int v){
+		if( i>R || j<L ) return;
+		if( L>=i && R<=j ){  
+			val.replace(v,L,R);
+			if(lazy==NULL) lazy=new int(v);
+			else *lazy=combine(v,*lazy);
+			return;
+		}  
+		propagate();	
+		left->update(i,j,v);	
+		right->update(i,j,v);
+		val=join(left->val,right->val);	
+	}
+
+	node query(int  i,int j){
+		if(i>R || j<L) return node();	
+		if(L>=i && R<=j) return val;
+		propagate();	
+		return join(left->query(i,j),right->query(i,j));	
+	}
+};
+
+"join(): join left range with right range"
+"replace(): change the value of this range "
+"combine(): combine an update value v with a lazy value"
+"Supports range updates with lazy propagation"
+"build(): generates all the tree nodes, ar must be of size (R-L+1) "
+"Use long long to use ranges from 0 to 2^64 "
+"node contructor with parameters is only needed if build() function"
+"is going to be used "
+"Create SegmentTree with new SegmentTree(0,n-1) "
+"Do not forget to clear memory at the end: delete st;"
 
 
 // Count Connected Components
@@ -255,7 +467,7 @@ void dfs(int x,int y){
 	for(int i=0;i<8;i++){
 		int x_=x+rox[i];
 		int y_=y+roy[i];
-		if(x_>=0 && y>=0 && x_<N && y_<M && vis[y][x]==UNVIS)
+		if(x_>=0 && y>=0 && x_<n && y_<m && vis[y][x]==UNVIS)
 			dfs(x_,y_);
 	}
 }
@@ -441,7 +653,7 @@ ii gcd_ext(int a,int b){
 int bin_exp(int b,int e){
 	int res=1;
 	for(;e>0;e>>=1){
-		if(b&1)	res=res*b%mod;
+		if(e&1)	res=res*b%mod;
 		b=b*b%mod;
 	}
 	return res;
