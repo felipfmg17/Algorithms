@@ -91,11 +91,12 @@ struct UnionFind{
 "uf_s[i]: size of disjoin set i"
 "uf: parents, root of each disjoin set"
 
+
 // Segment Tree
 
 struct node{
 	int x;
-	node(){		x=0;	}
+	node(){	x=0; }
 	node(int x_){	x=x_;	}
 };
 
@@ -106,19 +107,19 @@ node join(node n1,node n2){
 
 struct SegmentTree{
 	vector<node> st;
-	vi ar;
 
-	SegmentTree(int n){ ar.assign(n,0); st.assign(n*4,node());}
+	SegmentTree(int n) :
+		st(n*4,node()) {}
 
 	int lefts(int x){return x<<1;}
 	int rights(int x){ return (x<<1)+1;}
 
-	void build(int p,int L,int R){
+	void build(int p,int L,int R,vi &ar){
 		if(L==R) st[p]=node(ar[L]);
 		else{
 			int h=(L+R)>>1;
-			build(lefts(p),L,h);
-			build(rights(p),h+1,R);
+			build(lefts(p),L,h,ar);
+			build(rights(p),h+1,R,ar);
 			st[p]=join(st[lefts(p)],st[rights(p)]);
 		}
 	}
@@ -132,63 +133,48 @@ struct SegmentTree{
 		return join(n1,n2);
 	}
 
-	void update(int p,int L,int R,int i){
+	void update(int p,int L,int R,int i,int v){
 		if(i>R  || i<L) return;
-		if(R==L) build(p,L,R);
-		else{
-			int h=(L+R)>>1;
-			update(lefts(p),L,h,i);
-			update(rights(p),h+1,R,i);
-			st[p]=join(st[lefts(p)],st[rights(p)]);
-		}	
+		if(R==L){
+			st[p]=node(v);
+			return;
+		} 
+		int h=(L+R)>>1;
+		update(lefts(p),L,h,i,v);
+		update(rights(p),h+1,R,i,v);
+		st[p]=join(st[lefts(p)],st[rights(p)]);
 	}
 };
 
-"Simple updates"
-"ar[] must be filled from 0 to n-1, "
-"To construct the array  call build(1,0,n-1) "
-"query from x to y: query(1,0,n-1,x,y)"
-"to update first change the value in ar[i]=v then "
-"update position i with v: update(1,0,n-1,i)"
-"Default constructor must provide a neutral element";
+"implement node(),joind() "
+"Default constructor must provide a neutral value"
+"join(): handle how two segments are joined "
 
 
-//Segment Tree : Range Updates, Array Construction
+//Segment Tree Lazy Propagation
 
 struct node{
-	int *lazy;
 	int x;
-	node(){x=9999999; lazy=NULL;}
-	node(int x_) { x=x_; lazy=NULL; }
-
-	void replace(int v,int L,int R){
-		x=v;
-	}
-
-	void setLazy(int v){
-		if(lazy==NULL) lazy=new int(v);
-		else{ *lazy=v; }
-	}
-
-	void removeLazy(){
-		if(lazy!=NULL) {
-			delete lazy;
-			lazy=NULL;
-		}
-		
-	}
+	node(){x=9999999;}
+	node(int x_) { x=x_; }
+	void replace(int v,int L,int R){ x=v; }
 };
 
 node join(node n1,node n2){
-	node nvo;
-	nvo.x=min(n1.x,n2.x);
-	return nvo;
+	return node(min(n1.x,n2.x));
+}
+
+int combine(int lazy,int v){
+	return v;
 }
 
 struct SegmentTree{
 	vector<node> st;
+	vector< int* > lazy;
 
-	SegmentTree(int n){st.assign(n*4,node());}
+	SegmentTree(int n) : 
+		st(n*4,node()), 
+		lazy(n*4,(int*)NULL) {}
 
 	int lefts(int x){return x<<1;}
 	int rights(int x){ return (x<<1)+1;}
@@ -204,11 +190,12 @@ struct SegmentTree{
 	}
 
 	void propagate(int p,int L,int R){
-		if( st[p].lazy!= NULL){
+		if( lazy[p]!= NULL){
 			int h=(L+R)>>1;
-			update(lefts(p),L,h,L,h, *(st[p].lazy) );
-			update(rights(p),h+1,R,h+1,R, *(st[p].lazy));
-			st[p].removeLazy();
+			update(lefts(p),L,h,L,h, *lazy[p] );
+			update(rights(p),h+1,R,h+1,R, *lazy[p] );
+			delete lazy[p];
+			lazy[p]=NULL;
 		}
 	}
 
@@ -226,64 +213,45 @@ struct SegmentTree{
 		if(i>R  || j<L) return;
 		if(L>=i && R<=j){
 			st[p].replace(v,L,R);
-			st[p].setLazy(v);
+			if(lazy[p]==NULL) lazy[p]=new int(v);
+			else *lazy[p]=combine(*lazy[p],v);
 			return;
 		} 
 		propagate(p,L,R);
 		int h=(L+R)>>1;
 		update(lefts(p),L,h,i,j,v);
 		update(rights(p),h+1,R,i,j,v);
-		st[p]=join(st[lefts(p)],st[rights(p)]);
-			
+		st[p]=join(st[lefts(p)],st[rights(p)]);			
 	}
 };
 
-" SegmentTree for range updates using an array, lazy propagation is stored"
-" inside the node struct "
-" If bulid is not called at the begining the tree will start with neutral values"
-" replace() : calculate the value of the current node using the value v"
-" and the range (L,R) "
-" setLazy() : set the lazy flag on the node, if there was a previous value"
-"  do not alter the lazy==NULL  condition"
-" this function must combine both values"
-" join() : it joins to ranges"
-" propagate() updates children if there is a lazy, after that the lazy is removed"
-" node constructor must be provide a neutral value, if not the join function has to "
-" to handle it "
-" build(): must receive an vector of size n with the initial values "
-" when calling query and update from the main function use st.query(1,0,n-1,a,b) "
-" and st.update(1,0,n-1,a,b,v) and st.build((1,0,n-1,ar) "
+"implement node(),combine(),join(),replace()"
 
 
-//Segment Tree : Dynamic Construction  Range Updates;
+// Dynamic Segment Tree 
 
 struct node{
-	int x;
-	node(){		x= -99999999;	}
-	node(int x_) { x=x_;}
-
-	void replace(int v,int L,int R){
-		x=v;
-	}
+	lld x;
+	node(){	x=-99999999; }
+	node(lld x_) { x=x_;}
+	void replace(lld v,lld L,lld R){ x=v;}
 };
 
 node join(node n1,node n2){
-	node nvo;
-	nvo.x=max(n1.x,n2.x);
-	return nvo;
+	return node(max(n1.x,n2.x));
 }
 
-int combine(int v,int lazy){
+lld combine(lld lazy,lld v){
 	return v;
 }
 
 
 struct SegmentTree{
 	SegmentTree *left,*right;
-	int L,R,*lazy;
+	lld L,R,*lazy;
 	node val;
 
-	SegmentTree(int L_, int R_): val() {
+	SegmentTree(lld L_, lld R_): val() {
 		L=L_; R=R_;
 		left=right=NULL;
 		lazy=NULL;
@@ -295,7 +263,7 @@ struct SegmentTree{
 		if(right!=NULL) delete right;
 	}
 
-	void build(vi &ar){
+	void build(vector<lld > &ar){
 		if(L==R) val=node(ar[L]);
 		else{
 			propagate();
@@ -318,38 +286,28 @@ struct SegmentTree{
 		}
 	}
 
-	void update(int i,int j,int v){
+	node query(lld  i,lld j){
+		if(i>R || j<L) return node();	
+		if(L>=i && R<=j) return val;
+		propagate();	
+		return join(left->query(i,j),right->query(i,j));	
+	}
+
+	void update(lld i,lld  j,lld v){
 		if( i>R || j<L ) return;
 		if( L>=i && R<=j ){  
 			val.replace(v,L,R);
-			if(lazy==NULL) lazy=new int(v);
-			else *lazy=combine(v,*lazy);
+			if(lazy==NULL) lazy=new lld(v);
+			else *lazy=combine(*lazy,v);
 			return;
 		}  
 		propagate();	
 		left->update(i,j,v);	
 		right->update(i,j,v);
 		val=join(left->val,right->val);	
-	}
-
-	node query(int  i,int j){
-		if(i>R || j<L) return node();	
-		if(L>=i && R<=j) return val;
-		propagate();	
-		return join(left->query(i,j),right->query(i,j));	
-	}
+	}	
 };
 
-"join(): join left range with right range"
-"replace(): change the value of this range "
-"combine(): combine an update value v with a lazy value"
-"Supports range updates with lazy propagation"
-"build(): generates all the tree nodes, ar must be of size (R-L+1) "
-"Use long long to use ranges from 0 to 2^64 "
-"node contructor with parameters is only needed if build() function"
-"is going to be used "
-"Create SegmentTree with new SegmentTree(0,n-1) "
-"Do not forget to clear memory at the end: delete st;"
 
 
 // Count Connected Components
@@ -436,6 +394,11 @@ for(int i=0;i<n;i++)
 		dfs(i,-1);
 
 
+"GRAY TO GRAY: CYCLE EDGE"
+"GRAY TO WHITE: NEW NODE EDGE"
+"GRAY TO BALCK: FORWARD EDGE"
+
+
 
 // Bipartite Check (Bicoloring)
 
@@ -454,7 +417,6 @@ color.assign(n,-1);
 for(int i=0;i<n;i++)
 	if(color[i]==-1)
 		dfs(i,0);
-
 
 
 // Grid DFS
@@ -506,7 +468,7 @@ for(int i=0;i<n;i++)
 	}
 
 "ap: articulation points"
-"sc: source count, determine whether the root is ap"
+"sc: source count, determines whether the root is ap"
 
 
 // Articulations Points and Biconnected Components
@@ -616,7 +578,7 @@ void dag(){
 
 int primes[1000000];
 
-fill(primes,primes+k,1)
+fill(primes,primes+k,1);
 primes[0]=primes[1]=0;
 int top=ceil(sqrt(N));
 for(int i=2;i<top;i++){
