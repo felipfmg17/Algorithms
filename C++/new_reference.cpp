@@ -5,7 +5,12 @@ using namespace std;
 typedef vector<int> vi;
 typedef pair<int ,int> ii;
 typedef vector< ii > vii;
-typedef long long lld;
+typedef long long ll;
+
+
+int main(){
+	
+}
 
 
 // Compilation
@@ -56,7 +61,7 @@ struct FenwickTreeRange{
 struct UnionFind{
 	vi uf;
 	void make(){uf.push_back(uf.size());}
-	int find(int u){if(u!=uf[u]) return uf[u]=find(uf[u]);}
+	int find(int u){if(u!=uf[u]) uf[u]=find(uf[u]); return uf[u]; }
 	void join(int u,int v){u=find(u);v=find(v); if(u!=v) uf[u]=v;}
 };
 
@@ -66,6 +71,8 @@ struct UnionFind{
 	vi uf,uf_s;
 	int uf_n;
 
+	UnionFind(): uf_n(0) {}
+
 	void make(){
 		uf.push_back(uf.size());
 		uf_s.push_back(1);
@@ -74,7 +81,8 @@ struct UnionFind{
 
 	int find(int u){
 		if(u!=uf[u]) 
-			return uf[u]=find(uf[u]);
+			uf[u]=find(uf[u]);
+		return uf[u]; 
 	}
 
 	void join(int u,int v){
@@ -82,13 +90,17 @@ struct UnionFind{
 		if(u!=v) {
 			uf[u]=v;
 			uf_s[v]+=uf_s[u];
+			uf_n--;
 		}
+	}
+
+	int size(int u){
+		return uf_s[find(u)];
 	}
 };
 
-"set uf_n to zero after object creation"
+
 "uf_n: number of disjoin sets"
-"uf_s[i]: size of disjoin set i"
 "uf: parents, root of each disjoin set"
 
 
@@ -610,16 +622,28 @@ ii gcd_ext(int a,int b){
 }
 
 
-// Binary Exponentiation
+// Binary Modular Exponentiation
 
-int bin_exp(int b,int e){
-	int res=1;
+ll bin_exp(ll b,ll e){
+	ll res=1;
 	for(;e>0;e>>=1){
 		if(e&1)	res=res*b%mod;
 		b=b*b%mod;
 	}
 	return res;
 }
+
+// Binary Modular Multiplication
+
+ll bin_mul(ll a,ll b){
+	ll res=0;
+	for(;b>0;b>>=1){
+		if(b&1) res=(res+a)%mod;
+		a=(a+a)%mod;
+	}
+	return res;
+}
+
 
 // Euler's Totient Function
 
@@ -635,13 +659,43 @@ int phi(int n){
 
 // Modular Inverse 
 
-int inv = ( gcd_ext(a,mod).first%mod+mod ) % mod;
-int inv = bin_exp( a,phi(mod)-1 );
+ll mod_inv(int a){
+	return bin_exp(a,mod-2);
+}
 
-// Modular Binomial Coefficient nCr with mod = prime 
 
-int bin=fact[r]*fact[n-r] % mod;
-bin=fact[n]*bin_exp(bin,mod-2)%mod;     
+// Factorial
+
+vector<ll> fact;
+
+void factorial(int k){
+	fact.assign(k,0);
+	fact[0]=1;
+	for(int i=1;i<k;i++)
+		fact[i]=fact[i-1]*i%mod;
+}
+
+// Modular Binomial Coefficient nCr using factorial
+
+ll bin_cof(int n,int r){
+	return fact[n]*mod_inv(fact[n-r]*fact[r]%mod)%mod;
+}
+
+// Modular Binomial Coefficient nCr, O(n/2)
+
+ll bin_cof(int n,int r){
+	r=max(r,n-r);
+	ll res=1;
+	for(int i=r+1;i<=n;i++)
+		res= res*((i*mod_inv(i-r))%mod)%mod;
+	return res;
+}
+
+
+
+
+  
+
 
 
 
