@@ -320,77 +320,152 @@ struct SegmentTree{
 	}	
 };
 
+// Graph
 
+struct Graph{
+	vector< vi > g;
+	vector< set<int> > reps;
+	vi degs;
 
-// Count Connected Components
+	map<string, int > tab;
+	vi<string> keys;
 
-int cc;
-vector< vi > vis;
-
-void dfs(int u){
-	vis[u]=1;
-	for(int v:g[u])
-		if(vis[v]==0)
-			dfs(v);
-}
-
-cc=0;
-vis.assign(n,0);
-for(int i=0;i<n;i++)
-	if(vis[i]==0){
-		dfs(u);
-		cc++;
-	}
-
-// Single Source Shortest Path Unweighted Graph (BFS)
-
-vi dist(n,-1);
-for(int i;i<n;i++){
-	if(dist[i]==-1){
-		deque<int> order();
-		order.push_back(i);
-		dist[i]=0;
-		while(!order.empty()){
-			int u=order.front();
-			order.pop_front();
-			for(int v:g[u])
-				if(dist[v]!=-1){
-					dist[v]=dist[u]+1;
-					order.push_back(v);
-				}
+	int makeTab(string key){
+		if(tab.count(key)==0){
+			tab[key]=keys.size();
+			keys.push_back(key);
+			
+			g.push_back(vi());
+			reps.push_back( set<int>() );
+			degs.push_back(0);
 		}
+		return tab[key];
+	}
+
+	void add_edge(int a,int b){
+		if(reps[a].count(b)!=0)
+			return;
+		g[a].push_back(b);
+		reps[a].insert(b);
+		degs[b]++;
+	}
+
+};
+
+"degs[] is used to store in degree "
+"reps[] is used to avoid repeated edges"
+
+
+//  Count and mark Connected Components
+
+vi cc,ccr;
+
+void cc_dfs(int u,int s){
+	cc[u]=s;
+	for(int v:g[u])
+		if(cc[v]==-1)
+			cc_dfs(v,s);
+}
+
+void find_cc(){
+	cc.assign(g.size(),-1);
+	ccr.clear();
+	for(int i=0;i<g.size();i++)
+		if(cc[i]==-1){
+			cc_dfs(i,i);
+			ccr.push_back(i);
+		}
+}
+
+"ccr: Connected Components represants"
+"cc[u]: represants of u"
+
+
+// Single Source ShortestPaths and Farthest node 
+
+int sssp_bfs(int s,vi &sssp){
+	int fn=s;
+	deque<int> order;
+	order.push_back(s);
+	sssp[s]=0;
+	while(!order.empty()){
+		int u=order.front();
+		order.pop_front();
+		for(int v:g[u])
+			if(sssp[v]==-1){
+				sssp[v]=sssp[u]+1;
+				order.push_back(v);
+				if(sssp[v]>sssp[fn])
+					fn=v;
+			}
+	}
+	return fn;
+}
+
+"returns the farthest node from the source "
+"fill sssp[] with -1"
+
+// Find Diameter on a Tree
+
+int diameter(int s,vi &ss1,vi &ss2){
+	int a=sssp_bfs(s,ss1);
+	int b=sssp_bfs(a,ss2);
+	return ss2[b];
+}
+
+// BFS mark parents;
+
+void parent_bfs(int s,vi &parent){
+	deque<int> order;
+	order.push_back(s);
+	parent[s]=-1;
+	while(!order.empty()){
+		int u=order.front();
+		order.pop_front();
+		for(int v:g[u])
+			if(parent[v]==-2){
+				parent[v]=u;
+				order.push_back(v);
+			}
 	}
 }
 
+"fill parents with -2"
 
 
 // Topological Sort Kahn Algorithm
 
-vi wait,order;	
-for(int i=0;i<n;i++)		
-	if(deg[i]==0)
-		wait.push_back(i);	
-while(!wait.empty()){
-	int u=wait.back();
-	wait.pop_back();
-	order.push_back(u);
-	for(int v:g[u]){
-		deg[v]--;
-		if(deg[v]==0)
-			wait.push_back(v);
+int topo_sort(vi &topo){
+	vi wait,deg(degs);	
+	topo.clear();
+	for(int i=0;i<n;i++)		
+		if(deg[i]==0)
+			wait.push_back(i);	
+	while(!wait.empty()){
+		int u=wait.back();
+		wait.pop_back();
+		topo.push_back(u);
+		for(int v:g[u]){
+			deg[v]--;
+			if(deg[v]==0)
+				wait.push_back(v);
+		}
 	}
+	return top.size()==g.size()?1:0;
 }
+
+"Returns 1 if topo sort was successfully done "
+" or 0 if not "
 
 
 // Find Cycle
 
-vi state;
 
-bool dfs(int u,int p){
+bool cycle_dfs(int u,int p,vi &state){
 	state[u]=GRAY;
 	for(int v:g[u]){
 		if(state[v]==WHITE)
-			if(dfs(v,u))
+			if(cycle_dfs(v,u,state))
 				return true;
 		else if(state[v]==GRAY && v!=p)
 			return true;
@@ -400,11 +475,7 @@ bool dfs(int u,int p){
 }
 
 
-state.assign(n,WHITE);
-for(int i=0;i<n;i++)
-	if(state==WHITE)
-		dfs(i,-1);
-
+"assign state[] with WHITE"
 
 "GRAY TO GRAY: CYCLE EDGE"
 "GRAY TO WHITE: NEW NODE EDGE"
@@ -414,21 +485,16 @@ for(int i=0;i<n;i++)
 
 // Bipartite Check (Bicoloring)
 
-vi color;
-
-bool dfs(int u,int c){
+bool color_dfs(int u,int c,vi &color){
 	color[u]=c;
 	for(int v:g[u])
 		if(color[v]==-1)
-			if(!dfs(v,c^1))	return false;
+			if(!color_dfs(v,c^1,color))	return false;
 		else if(color[v]==color[u])	return false;	
 	return true;
 }
 
-color.assign(n,-1);
-for(int i=0;i<n;i++)
-	if(color[i]==-1)
-		dfs(i,0);
+"assign color[] with -1"
 
 
 // Grid DFS
@@ -481,6 +547,7 @@ for(int i=0;i<n;i++)
 
 "ap: articulation points"
 "sc: source count, determines whether the root is ap"
+"in the first call p==-1"
 
 
 // Articulations Points and Biconnected Components
@@ -585,6 +652,7 @@ void dag(){
 
 "n: nodes in orignal graph"
 "scc_n : nodes in the dag"
+
 
 // Erathostenes Sieve
 
