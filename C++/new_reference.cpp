@@ -10,6 +10,7 @@ typedef long long ll;
 
 int main(){
 	
+	return 0;
 }
 
 
@@ -654,32 +655,47 @@ void dag(){
 "scc_n : nodes in the dag"
 
 
+
 // Erathostenes Sieve
 
-int primes[1000000];
+vi primes;
 
-fill(primes,primes+k,1);
-primes[0]=primes[1]=0;
-int top=ceil(sqrt(N));
-for(int i=2;i<top;i++){
-	if(primes[i]==1)
-		for(int j=i;i*j<=N;j++)
-			primes[i*j]=0;
+void sieve_primes(int n){
+	primes.clear();
+	vi nums(n,1);
+	nums[0]=nums[1]=0;
+	int top=ceil(sqrt(n));
+	for(int i=2;i<top;i++)
+		if(nums[i]==1)
+			for(int j=i;i*j<n;j++)
+				nums[i*j]=0;
+	for(int i=0;i<n;i++)
+		if(nums[i]==1)
+			primes.push_back(i);
 }
 
-// Primes to list;
 
-vi prims;
+// Prime Factorization
 
-prims.clear();
-for(int i=0;i<k;i++)
-	if(primes[i]==1)
-		prims.push_back(i);
+void prime_fact(ll n, map<int,int> &pf){
+	pf.clear();
+	for(int p: primes){
+		if(p*p>n) break;
+		while(n%p==0){
+			n/=p;
+			pf[p]=pf[p]+1;
+		}
+	}
+	if(n!=1) pf[n]=1;
+}
 
+"pf: prime factorization base and exponent "
 
 // Greatest Common Divisor
 
 int gcd(int a,int b){return b==0? abs(a): gcd(b,a%b);}
+
+int lcm(int a,int b){return (a*b)/gcd(a,b); }
 
 // Extended Euclid Algorithm
 
@@ -731,6 +747,10 @@ ll mod_inv(int a){
 	return bin_exp(a,mod-2);
 }
 
+ll mod_inv(int a){
+	return (gcd_ext(a,mod).first%mod+mod)%mod;
+}
+
 
 // Factorial
 
@@ -757,6 +777,57 @@ ll bin_cof(int n,int r){
 	for(int i=r+1;i<=n;i++)
 		res= res*((i*mod_inv(i-r))%mod)%mod;
 	return res;
+}
+
+
+
+// Rational Number
+
+struct ration {
+	int num,den;
+
+	ration(int n,int d){
+		if(d==0){ num=1; den=0;}
+		else if(n==0){ num=0; den=1; }
+		else{
+			int sign= n&(1<<31) ^ (d&(1<<31) );
+			n=abs(n);
+			d=abs(d);
+			n= sign? -n:n;
+			int g=gcd(n,d);
+			num=n/g;
+			den=d/g;
+		}
+	}
+
+	bool operator==(const ration& n) const {
+	    return num==n.num && den==n.den;
+	}
+
+	bool operator<(const ration& n) const {
+	    return num*n.den<den*n.num;
+	}
+};
+
+
+
+
+ration operator+(ration& a, ration& b) {
+	int g=(a.den*b.den)/gcd(a.den,b.den);
+	return ration( (g/a.den)*a.num + (g/b.den)*b.num , g );
+}
+
+ration operator-(ration& a, ration& b) {
+	int g=(a.den*b.den)/gcd(a.den,b.den);
+	return ration( (g/a.den)*a.num - (g/b.den)*b.num , g );
+}
+
+ration operator*(ration& a, ration& b)  {
+	return ration( a.num*b.num, a.den*b.den );
+}
+
+ration operator/(ration& a, ration& b)  {
+	return ration( a.num*b.den, a.den*b.num );
 }
 
 
