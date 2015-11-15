@@ -14,6 +14,9 @@ int main(){
 }
 
 
+
+
+
 // Compilation
 
 cls && g++ -std=c++11 main.cpp -o main
@@ -781,6 +784,18 @@ ll bin_cof(int n,int r){
 
 
 
+// Quadratic equation ax^2+bx+c=0
+
+int quadratic(double a,double b,double c,double &x1,double &x2){
+	double det=b*b-4*a*c;
+	if(det<0) return 0;
+	det=sqrt(det);
+	x1=(-b+det)/(2*a);
+	x2=(-b-det)/(2*a);
+	return 1;
+}
+
+
 // Rational Number
 
 struct ration {
@@ -791,9 +806,8 @@ struct ration {
 		else if(n==0){ num=0; den=1; }
 		else{
 			int sign= n&(1<<31) ^ (d&(1<<31) );
-			n=abs(n);
-			d=abs(d);
-			n= sign? -n:n;
+			n=abs(n); d=abs(d);
+			n=sign?-n:n;
 			int g=gcd(n,d);
 			num=n/g;
 			den=d/g;
@@ -808,9 +822,6 @@ struct ration {
 	    return num*n.den<den*n.num;
 	}
 };
-
-
-
 
 ration operator+(ration& a, ration& b) {
 	int g=(a.den*b.den)/gcd(a.den,b.den);
@@ -832,7 +843,25 @@ ration operator/(ration& a, ration& b)  {
 
 
 
+// Point: vector
 
+struct point{
+	long double x,y;
+
+	point(long double x_,long  double y_): x(x_), y(y_) {}
+
+	long double len(){
+		return hypot(x,y);
+	}
+};
+
+point operator-(point u, point v){
+	return point(u.x-v.x,u.y-v.y);
+}
+
+point operator+(point u, point v){
+	return point(u.x+v.x,u.y+v.y);
+}
   
 
 
